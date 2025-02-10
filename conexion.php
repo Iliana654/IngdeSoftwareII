@@ -1,21 +1,14 @@
 <?php
-class Conexion {
-    public function ConexionBD() {
-        $host = 'IlianaZuniga\MSSQLSERVER02'; // Nombre de la instancia de SQL Server
-        $user = 'user_iliana';
-        $password = 'iliana122005';
-        $db = 'SistemaCitasMedicas';
+$server = 'IlianaZuniga\MSSQLSERVER02';
+$database = 'SistemaCitasMedicas';
+$username = 'user_iliana';
+$password = 'iliana122005';
 
-        try {
-            $conexion = new PDO("sqlsrv:Server=$host;Database=$db", $user, $password);
-            // Es recomendable quitar el echo de depuración en producción
-            echo "Conexión exitosa";
-            return $conexion;
-        }
-        catch(PDOException $e) {
-            echo "Error: " . $e->getMessage();
-            echo "Error en la conexión";
-        }
-    }
+try {
+    $conn = new PDO("sqlsrv:server=$server;Database=$database", $username, $password);
+    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    //echo "Conexión establecida";
+} catch (PDOException $e) {
+    echo "Error de conexion: " . $e->getMessage();
 }
 ?>

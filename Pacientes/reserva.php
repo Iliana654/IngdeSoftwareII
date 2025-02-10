@@ -1,10 +1,6 @@
 <?php
 // Ajusta la ruta según la ubicación real del archivo
-include 'conexion.php';
-
-// Instanciar la clase y obtener la conexión PDO
-$conexionObj = new Conexion();
-$conn = $conexionObj->ConexionBD();
+include '../conexion.php';
 
 if (!$conn) {
     die("Error: No se pudo conectar a la base de datos.");
@@ -128,6 +124,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     
     <!-- Mostrar mensaje de confirmación o error si existe -->
     <?php
+    include '../principal/header.php';
     if (isset($mensaje)) {
         $claseMensaje = strpos($mensaje, 'Error') !== false ? 'error' : 'success';
         echo "<div class='mensaje $claseMensaje'><strong>$mensaje</strong></div>";
