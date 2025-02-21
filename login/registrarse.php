@@ -55,7 +55,7 @@
         </div>
 
         <div class="form-doctor">
-        <label for="idespecialidad">Especialidad</label>
+            <label for="idespecialidad">Especialidad</label>
             <select id="idespecialidad" name="idespecialidad">
                 <option value="0">Seleccionar</option>
                 <?php

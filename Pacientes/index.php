@@ -9,11 +9,12 @@
 
 <body>
     <?php include 'header.php'; ?>
-    <div class="contenedor">
-        <?php include 'menu.php'; ?>
-        <main class="contenido">
-            <h1>INICIO</h1>
-        </main>
-    </div>
+    <main>
+        
+    </main>
+    <footer class="footer">
+        <p>&copy; 2025 MediCitas - Todos los derechos reservados</p>
+    </footer>
 </body>
+
 </html>
