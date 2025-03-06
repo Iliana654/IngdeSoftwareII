@@ -26,14 +26,15 @@
                     <tbody>
                         <?php
                         include '../conexion.php';
-                        $sql = "SELECT * FROM Especialidades";
+                        $sql = "SELECT * FROM Medicos";
                         $consulta = $conn->prepare($sql);
                         $consulta->execute();
                         $especialidades = $consulta->fetchAll(PDO::FETCH_ASSOC);
                         foreach ($especialidades as $row) {
                             echo "<tr>";
-                            echo "<td>" . $row["nombreEspecialidad"] . "</td>";
-                            echo "<td>" . $row["descripcion"] . "</td>";
+                            echo "<td>" . $row["idUsuario"] . "</td>";
+                            echo "<td>" . $row["idEspecialidades"] . "</td>";
+                            echo "<td>" . $row["anosExperiencia"] . "</td>";
                             echo "</tr>";
                         }
                         ?>

@@ -28,11 +28,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 ];
 
                 if($resultset['rol'] == 'Administrador') {
-                    header('Location: ../../admin/');
+                    header('Location: ../../admin/medicos.php');
                 } else if($resultset['rol'] == 'Médico') {       
                     header('Location: ../../medicos/');
                 } else if($resultset['rol'] == 'Paciente') {
-                    header('Location: ../../pacientes/');
+                    header('Location: ../../Pacientes/index.php');
                 }
             } else {
                 $_SESSION['error'] = "Usuario o contraseña incorrectos.";
