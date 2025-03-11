@@ -2,8 +2,9 @@
 include '../conexion.php';
 
 if (isset($_POST['fecha']) && isset($_POST['especialidad'])) {
-    $fecha = $_POST['fecha'];  
-    $diaSemana = date('l', strtotime($fecha)); 
+    $fecha = $_POST['fecha'];
+    $diaSemana = date('l', strtotime($fecha));
+
     $dias_traduccion = [
         'Monday' => 'Lunes',
         'Tuesday' => 'Martes',
@@ -13,41 +14,49 @@ if (isset($_POST['fecha']) && isset($_POST['especialidad'])) {
         'Saturday' => 'Sábado',
         'Sunday' => 'Domingo'
     ];
-    $diaSemana = $dias_traduccion[$diaSemana];
+
+    $diaSemana = $dias_traduccion[$diaSemana] ?? '';
     $especialidad = $_POST['especialidad'];
 
-    
     $sql = "
-        SELECT h.idHorario, h.horaInicio, h.horaFin, b.nombre AS nombreMedico
-        FROM HorariosMedicos h
-        JOIN Medicos u ON h.idMedico = u.idMedico
-        JOIN Usuarios b ON b.idUsuario = u.idUsuario
-        JOIN Especialidades e ON e.idEspecialidad = u.idEspecialidad
-        WHERE h.diaSemana = :diaSemana AND e.nombreEspecialidad = :especialidad
-    ";
+    SELECT 
+        h.idHorario, 
+        CONVERT(VARCHAR(5), h.horaInicio, 108) AS horaInicio, 
+        CONVERT(VARCHAR(5), h.horaFin, 108) AS horaFin, 
+        b.nombre AS nombreMedico
+    FROM HorariosMedicos h
+    JOIN Medicos u ON h.idMedico = u.idMedico
+    JOIN Usuarios b ON b.idUsuario = u.idUsuario
+    JOIN Especialidades e ON e.idEspecialidad = u.idEspecialidad
+    WHERE h.diaSemana = :diaSemana AND e.nombreEspecialidad = :especialidad
+";
 
     $consulta = $conn->prepare($sql);
     $consulta->bindParam(':diaSemana', $diaSemana);
     $consulta->bindParam(':especialidad', $especialidad);
     $consulta->execute();
+
     $horarios = $consulta->fetchAll(PDO::FETCH_ASSOC);
 
     if (!empty($horarios)) {
         foreach ($horarios as $horario) {
-            echo "<li>{$horario['horaInicio']} - {$horario['horaFin']} - Médico: {$horario['nombreMedico']}</li>";
+            
+            $horaInicio = date("H:i", strtotime($horario['horaInicio']));
+            $horaFin = date("H:i", strtotime($horario['horaFin']));
+
+            echo "<tr>
+                    <td>" . $horario['horaInicio'] . "</td>
+                    <td>" . $horario['horaFin'] . "</td>
+                    <td>" . $horario['nombreMedico'] . "</td>
+                    <td>
+                        <button class='btn-horario' data-horario='" . $horario['idHorario'] . "'>
+                            Seleccionar
+                        </button>
+                    </td>
+                  </tr>";
         }
     } else {
-        $sqlMedicos = "SELECT * FROM Medicos WHERE idEspecialidad = (SELECT idEspecialidad FROM Especialidades WHERE nombreEspecialidad = :especialidad)";
-        $consultaMedicos = $conn->prepare($sqlMedicos);
-        $consultaMedicos->bindParam(':especialidad', $especialidad);
-        $consultaMedicos->execute();
-        $medicos = $consultaMedicos->fetchAll(PDO::FETCH_ASSOC);
-
-        if (empty($medicos)) {
-            echo "<li>No hay médicos disponibles para esta especialidad en la fecha seleccionada.</li>";
-        } else {
-            echo "<li>No hay horarios disponibles para esta fecha.</li>";
-        }
+        echo "<tr><td colspan='4'>No hay horarios disponibles para esta fecha.</td></tr>";
     }
 }
 ?>
