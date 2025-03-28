@@ -71,8 +71,9 @@ if (isset($_GET['ajax'])) {
                                     <a href='#' class='edit-btn' 
                                         data-idespecialidad='{$fila['idEspecialidad']}'
                                         data-especialidad='{$fila['nombreEspecialidad']}'
-                                        data-descripcion='{$fila['descripcion']}'></a>
-                                    <a href='#' class='delete-btn' data-idespecialidad='{$fila['idEspecialidad']}'></a>
+                                        data-descripcion='{$fila['descripcion']}'>
+                                        <img src=\"../img/edit.png\" width=\"35\" height=\"35\"></a>
+                                    <a href='#' class='delete-btn' data-idespecialidad='{$fila['idEspecialidad']}'><img src=\"../img/delete.png\" width=\"35\" height=\"35\"></a>
                                 </td>
                               </tr>";
                                 }
@@ -115,8 +116,11 @@ if (isset($_GET['ajax'])) {
                             <a href="#" class="edit-btn" 
                                 data-idespecialidad="${especialidades.idEspecialidad}"
                                 data-especialidad="${especialidades.nombreEspecialidad}"
-                                data-descripcion="${especialidades.descripcion}"></a>
-                            <a href="#" class="delete-btn" data-idespecialidad="${especialidades.idespecialidad}"></a>
+                                data-descripcion="${especialidades.descripcion}">
+                                <img src="../img/edit.png" width="35" height="35"></a>
+                            <a href="#" class="delete-btn" data-idespecialidad="${especialidades.idespecialidad}">
+                                <img src="../img/delete.png" width="35" height="35">
+                            </a>
                         </td>
                     </tr>
                 `;

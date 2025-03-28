@@ -4,12 +4,14 @@ session_start();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $_SESSION['form_data'] = $_POST;
+    $idPaciente = $_POST['idPaciente'];
     $idCita = $_POST['idCita'];
     $tipoDocumento = $_POST['tipoDocumento'];
     $descripcion = $_POST['descripcion'];
-    $fechaSubida = date("Y-m-d");
+    $fechaSubida = $_POST['fechaSubida'];
+    $idMedico = $_POST['idMedico'];
 
-    if (empty($idCita) || empty($tipoDocumento) || empty($descripcion) || empty($fechaSubida)) {
+    if (empty($idPaciente) || empty($idCita) || empty($tipoDocumento) || empty($descripcion) || empty($fechaSubida) || empty($idMedico)) {
         $_SESSION['error'] = "Complete los campos obligatorios.";
         header("Location: ../documentosmedicos.php");
         exit();
@@ -17,20 +19,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         // Verificar si ya existe un documento con los mismos datos
-        $consulta = "SELECT * FROM DocumentosMedicos WHERE idCita = ? AND tipoDocumento = ? AND descripcion = ?";
+        $consulta = "SELECT * FROM DocumentosMedicos WHERE idPaciente = ? AND idCita = ? AND tipoDocumento = ? AND descripcion = ? AND fechaSubida = ? AND idMedico = ?";
         $statement = $conn->prepare($consulta);
-        $statement->execute([$idCita, $tipoDocumento, $descripcion]);
+        $statement->execute([$idPaciente, $idCita, $tipoDocumento, $descripcion, $fechaSubida, $idMedico]);
 
         if ($statement->fetch()) {
-            $_SESSION['error'] = "Ya existe un documento con los mismos datos de Cita y tipo de documento.";
+            $_SESSION['error'] = "Ya existe un documento con este paciente, cita, médico, tipo de documento, descripción y fecha de subida.";
             header("Location: ../documentosmedicos.php");
             exit();
         }
 
         // Insertar el nuevo documento
-        $consulta = "INSERT INTO DocumentosMedicos (idCita, tipoDocumento, descripcion, fechaSubida) VALUES (?, ?, ?, ?)";
+        $consulta = "INSERT INTO DocumentosMedicos (idPaciente, idCita, tipoDocumento, descripcion, fechaSubida, idMedico) VALUES (?, ?, ?, ?, ?, ?)";
         $statement = $conn->prepare($consulta);
-        $statement->execute([$idCita, $tipoDocumento, $descripcion, $fechaSubida]);
+        $statement->execute([$idPaciente, $idCita, $tipoDocumento, $descripcion, $fechaSubida, $idMedico]);
 
         if ($statement->rowCount() > 0) {
             $_SESSION['success'] = "Documento agregado correctamente.";

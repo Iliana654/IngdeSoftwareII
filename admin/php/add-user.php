@@ -12,7 +12,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $confirmPassword = $_POST['confirmPassword'];
     $rol = $_POST['tipoUsuario'];
     $rolPaginaActual = $_POST['rol-tipoUsuario'];
-    $esNino = $_POST['esNino'];
 
     function Redirigir($rolPaginaActual)
     {
@@ -25,18 +24,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
-    if($esNino == 'si') {
-        if (empty($dni) || empty($nombre) || empty($apellido) || empty($correo) || empty($usuario) || empty($password) || empty($confirmPassword) || empty($rol)) {
-            $_SESSION['error'] = "Complete los campos obligatorios. 1";
-            Redirigir($rolPaginaActual);
-            exit();
-        }
-    } else {
-        if (empty($dni) || empty($nombre) || empty($apellido)) {
-            $_SESSION['error'] = "Complete los campos obligatorios. 2";
-            Redirigir($rolPaginaActual);
-            exit();
-        }
+    if (empty($dni) || empty($nombre) || empty($apellido) || empty($correo) || empty($usuario) || empty($password) || empty($confirmPassword) || empty($rol)) {
+        $_SESSION['error'] = "Complete los campos obligatorios.";
+        Redirigir($rolPaginaActual);
+        exit();
     }
 
     if ($rol == '1') {
@@ -46,23 +37,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $telefono = $_POST['telefono'];
         $direccion = $_POST['direccion'];
 
-        if($esNino == 'si') {
-            $nombreTutor = $_POST['nombreTutor'];
-            $dniTutor = $_POST['dniTutor'];
-
-            if(empty($nombreTutor) || empty($dniTutor)) {
-                $_SESSION['error'] = "Complete los campos obligatorios. 3";
-                Redirigir($rolPaginaActual);
-                exit();
-            }
-        }
-        else {
-            $nombreTutor = null;
-            $dniTutor = null;
-        }
-
         if (empty($fechaNacimiento) || empty($sexo) || empty($telefono) || empty($direccion)) {
-            $_SESSION['error'] = "Complete los campos obligatorios. 4";
+            $_SESSION['error'] = "Complete los campos obligatorios";
             Redirigir($rolPaginaActual);
             exit();
         }
@@ -70,10 +46,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $idespecialidad = $_POST['idespecialidad'];
         $licenciaMedica = $_POST['licenciaMedica'];
         $aniosExperiencia = $_POST['aniosExperiencia'];
-        $telefonoMedico = $_POST['telefonoMedico'];
         $rol = 'Médico';
 
-        if ($idespecialidad == 0 || empty($licenciaMedica) || empty($aniosExperiencia) || empty($telefonoMedico)) {
+        if ($idespecialidad == 0 || empty($licenciaMedica) || empty($aniosExperiencia)) {
             $_SESSION['error'] = "Complete los campos obligatorios";
             Redirigir($rolPaginaActual);
             exit();
@@ -85,7 +60,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $fechaNacimiento = null;
         $sexo = null;
         $telefono = null;
-        $telefonoMedico = null;
         $rol = 'Administrador';
     } else {
         $_SESSION['error'] = "Seleccione un rol.";
@@ -112,41 +86,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        $consulta = "SELECT * FROM Medicos WHERE numerolicenciaMedica = ? OR telefono = ?";
+        $consulta = "SELECT * FROM Medicos WHERE numerolicenciaMedica = ?";
         $statement = $conn->prepare($consulta);
-        $statement->execute([$licenciaMedica, $telefonoMedico]);
+        $statement->execute([$licenciaMedica]);
 
         if ($statement->fetch()) {
-            $_SESSION['error'] = "El número de licencia médica o el número telefónico ya está registrado.";
+            $_SESSION['error'] = "El número de licencia médica ya está registrado.";
             Redirigir($rolPaginaActual);
             exit();
-        }
-
-        if($esNino == 'si') {
-            $consulta = "INSERT INTO Usuarios (dni, nombre, apellido, rol) VALUES (?, ?, ?, ?)";
-            $statement = $conn->prepare($consulta);
-            $statement->execute([$dni, $nombre, $apellido, $rol]);
-
-            if ($statement->rowCount() > 0) {
-                $idusuario = $conn->lastInsertId();
-                $responsable = "INSERT INTO Responsables (nombre, dni, telefono) VALUES (?,?,?)";
-                $statement = $conn->prepare($responsable);
-                $statement->execute([$nombreTutor, $dniTutor, $telefono]);
-
-                if($statement->rowCount() > 0) {
-                    $idresponsable = $conn->lastInsertId();
-                    $paciente = "INSERT INTO Pacientes (idUsuario, fechaNacimiento, sexo, direccion, idResponsable) VALUES (?, ?, ?, ?, ?)";
-                    $statement = $conn->prepare($paciente);
-                    $statement->execute([$idusuario, $fechaNacimiento, $sexo, $direccion, $idresponsable]);
-
-                    if($statement->rowCount() > 0) {
-                        $_SESSION['success'] = "Paciente registrado correctamente.";
-                        unset($_SESSION['form_data']);
-                        Redirigir($rolPaginaActual);
-                        exit();
-                    }
-                }
-            }
         }
 
         $consulta = "INSERT INTO Usuarios (dni, nombre, apellido, usuario, correo, contrasenia, rol) VALUES (?, ?, ?, ?, ?, ?, ?)";
@@ -156,9 +103,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($statement->rowCount() > 0) {
             if ($rol == 'Médico') {
                 $idusuario = $conn->lastInsertId();
-                $medico = "INSERT INTO Medicos (idUsuario, idEspecialidad, numerolicenciaMedica, anosExperiencia, telefono) VALUES (?,?,?,?,?)";
+                $medico = "INSERT INTO Medicos (idUsuario, idEspecialidad, numerolicenciaMedica, anosExperiencia) VALUES (?,?,?,?)";
                 $statement = $conn->prepare($medico);
-                $statement->execute([$idusuario, $idespecialidad, $licenciaMedica, $aniosExperiencia, $telefonoMedico]);
+                $statement->execute([$idusuario, $idespecialidad, $licenciaMedica, $aniosExperiencia]);
                 
             } else if ($rol == 'Paciente') {
                 $idusuario = $conn->lastInsertId();
