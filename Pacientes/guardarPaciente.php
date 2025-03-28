@@ -1,47 +1,12 @@
-<?php
-include '../conexion.php';
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $idpaciente = $_POST['idpaciente']; 
-    $paciente = $_POST['paciente'];
-    $idmedico = $_POST['idmedico']; 
-    $medico = $_POST['medico'];
-    $fecha = $_POST['fecha'];
-    $hora = $_POST['hora'];
-    $motivo = $_POST['motivo']; 
-    $estado = $_POST['estado'];
-
-    if (empty($idpaciente) || empty($idmedico) || empty($fecha) || empty($hora) || empty($motivo) || empty($estado)) {
-        $_SESSION['error'] = "Complete los campos obligatorios.";
-        header('Location: confirmación.php');
-        exit();
-    }
-
-    try {
-        $consulta = "SELECT * FROM Citas WHERE idPaciente = ? AND idMedico = ? AND fecha = ? AND hora = ?";
-        $statement = $conn->prepare($consulta);
-        $statement->execute([$idpaciente, $idmedico, $fecha, $hora]);
-
-        if ($statement->fetch()) {
-            $_SESSION['error'] = "Ya existe una cita con este paciente y médico en la misma fecha y hora.";
-            header('Location: confirmación.php');
-            exit();
-        }
-    $consulta = "INSERT INTO Citas (idPaciente, idMedico, fecha, hora, motivo, estado) VALUES (?, ?, ?, ?, ?, ?)";
-    $statement = $conn->prepare($consulta);
-    $statement->execute([$idpaciente, $idmedico, $fecha, $hora, $motivo, $estado]);
-
-    if($statement->rowCount() > 0) {
-        $_SESSION['success'] = "Cita agregada correctamente.";
-
-    } else {
-    catch (PDOException $e) {
-    $_SESSION['error'] = "Error en la base de datos: " . $e->getMessage();
-    }    
-    }   
-{
-    header("Location: confirmación.php");
-    exit;
-    }
-}
-?>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCitas - Citas Médicas</title>
+    <link rel="stylesheet" href="../css/estilo.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css"> 
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>

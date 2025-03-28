@@ -31,6 +31,7 @@
                         $sql = "
                             SELECT 
                                 u.nombre AS nombreMedico,
+                                u.apellido AS apellidoMedico,
                                 e.nombreEspecialidad AS especialidad,
                                 m.numeroLicenciaMedica,
                                 m.anosExperiencia
@@ -43,7 +44,7 @@
                         $medicos = $consulta->fetchAll(PDO::FETCH_ASSOC);
                         foreach ($medicos as $row) {
                             echo "<tr>";
-                            echo "<td>" . $row["nombreMedico"] . "</td>";
+                            echo "<td>" . $row["nombreMedico"]. " " . $row["apellidoMedico"] . "</td>";
                             echo "<td>" . $row["especialidad"] . "</td>";
                             echo "<td>" . $row["numeroLicenciaMedica"] . "</td>";
                             echo "<td>" . $row["anosExperiencia"] . "</td>";

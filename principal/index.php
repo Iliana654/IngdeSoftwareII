@@ -1,6 +1,3 @@
-<?php
-session_start();
-?>
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 
@@ -8,14 +5,11 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediCitas - Citas Médicas</title>
-
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
     <?php include 'header.php'; ?>
-    <?php include 'menu.php'; ?>
-    <main class="contenido">
+    <main>
         <section id="sobre-nosotros" class="container">
             <h2>Sobre Nosotros</h2>
             <p>MediCitas es una clínica comprometida con el bienestar de nuestros pacientes en Santa Bárbara, Honduras. Brindamos atención médica de calidad con un equipo de profesionales altamente calificados.</p>
@@ -48,7 +42,7 @@ session_start();
             <p>Lunes a Viernes: 8:00 AM - 6:00 PM</p>
             <p>Sábados: 8:00 AM - 2:00 PM</p>
             <p>Domingos: Cerrado</p>
-            <a href="../login/login.php" class="btn-reservar">
+            <a href="reserva.php" class="btn-reservar">
                 <i class="fas fa-calendar-check"></i> Reservar Cita Online
             </a>
         </section>

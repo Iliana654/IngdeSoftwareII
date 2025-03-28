@@ -7,23 +7,30 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpWord\PhpWord;
 
-include '../conexion.php'; 
+include '../conexion.php';
 $medico_filter = $_GET['medico'] ?? '';
 $paciente_filter = $_GET['paciente'] ?? '';
 $fecha_filter = $_GET['fecha'] ?? '';
 $hora_filter = $_GET['hora'] ?? '';
+$motivo_filter = $_GET['motivo'] ?? '';
 $estado_filter = $_GET['estado'] ?? '';
 
-$sql = "SELECT U1.nombre + ' ' + U1.apellido AS paciente, 
-               U2.nombre + ' ' + U2.apellido AS medico, 
-               Citas.fecha, 
-               Citas.hora, 
-               Citas.estado 
+$sql = "SELECT Citas.idCita,
+       U1.dni AS dnipaciente, 
+       Citas.idPaciente, U1.nombre + ' ' + U1.apellido AS paciente, 
+       U2.dni AS dnimedico,
+       Citas.idMedico, U2.nombre + ' ' + U2.apellido AS medico, 
+       HorariosMedicos.fecha AS FechaAtencion, 
+       CONVERT(VARCHAR, Citas.hora, 108) AS hora,
+       Citas.motivo,
+       Citas.estado,
+       Citas.idHorario
         FROM Citas 
         INNER JOIN Pacientes ON Citas.idPaciente = Pacientes.idPaciente
         INNER JOIN Usuarios U1 ON Pacientes.idUsuario = U1.idUsuario
         INNER JOIN Medicos ON Citas.idMedico = Medicos.idMedico
         INNER JOIN Usuarios U2 ON Medicos.idUsuario = U2.idUsuario
+		INNER JOIN HorariosMedicos ON Citas.idHorario = HorariosMedicos.idHorario
         WHERE 1=1";
 
 if ($medico_filter) {
@@ -33,7 +40,7 @@ if ($paciente_filter) {
     $sql .= " AND U1.nombre LIKE '%$paciente_filter%'";
 }
 if ($fecha_filter) {
-    $sql .= " AND Citas.fecha = '$fecha_filter'";
+    $sql .= " AND HorariosMedicos.fecha = '$fecha_filter'";
 }
 if ($hora_filter) {
     $sql .= " AND Citas.hora = '$hora_filter'";
@@ -48,6 +55,11 @@ try {
     $citas = $query->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     die("Error al ejecutar la consulta: " . $e->getMessage());
+}
+
+if (isset($_GET['ajax'])) {
+    echo json_encode($citas);
+    exit;
 }
 
 if (isset($_GET['export_pdf'])) {
@@ -93,7 +105,8 @@ if (isset($_GET['export_excel'])) {
     $sheet->setCellValue('B1', 'Médico');
     $sheet->setCellValue('C1', 'Fecha');
     $sheet->setCellValue('D1', 'Hora');
-    $sheet->setCellValue('E1', 'Estado');
+    $sheet->setCellValue('E1', 'Motivo');
+    $sheet->setCellValue('F1', 'Estado');
 
     $row = 2;
     foreach ($citas as $fila) {
@@ -101,6 +114,7 @@ if (isset($_GET['export_excel'])) {
         $sheet->setCellValue("B$row", $fila['medico']);
         $sheet->setCellValue("C$row", $fila['fecha']);
         $sheet->setCellValue("D$row", $fila['hora']);
+        $sheet->setCellValue("E$row", $fila['motivo']);
         $sheet->setCellValue("E$row", $fila['estado']);
         $row++;
     }
@@ -125,6 +139,7 @@ if (isset($_GET['export_word'])) {
     $table->addCell(2000)->addText("Médico");
     $table->addCell(2000)->addText("Fecha");
     $table->addCell(2000)->addText("Hora");
+    $table->addCell(2000)->addText("Motivo");
     $table->addCell(2000)->addText("Estado");
 
     foreach ($citas as $fila) {
@@ -133,6 +148,7 @@ if (isset($_GET['export_word'])) {
         $table->addCell(2000)->addText($fila['medico']);
         $table->addCell(2000)->addText($fila['fecha']);
         $table->addCell(2000)->addText($fila['hora']);
+        $table->addCell(2000)->addText($fila['motivo']);
         $table->addCell(2000)->addText($fila['estado']);
     }
 
@@ -144,160 +160,319 @@ if (isset($_GET['export_word'])) {
 ?>
 <!DOCTYPE html>
 <html lang="es">
+<style>
+    .add-btn,
+    .btn-pdf,
+    .btn-excel,
+    .btn-word {
+        display: inline-block;
+        background-color: #0b5471;
+        color: white;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        padding: 10px 20px;
+        border-radius: 5px;
+        text-decoration: none;
+        font-size: 14px;
+    }
+
+    .add-btn:hover,
+    .btn-pdf:hover,
+    .btn-excel:hover,
+    .btn-word:hover {
+        background-color: rgb(10, 60, 80);
+    }
+
+    @media (max-width: 768px) {
+
+
+        .export-buttons {
+            flex-direction: column;
+        }
+
+        .add-btn,
+        .btn-pdf,
+        .btn-excel,
+        .btn-word {
+            width: 100%;
+            margin-right: 0;
+        }
+    }
+</style>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCitas - Citas Médicas</title>
-    <link rel="stylesheet" href="../css/estilo.css">
+    <title>Gestión de Citas</title>
     <link rel="stylesheet" href="../css/tabla.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-    <style>
-        .filter-container {
-            background: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
-            width: 100%;
-            max-width: 1200px;
-            margin: 20px auto;
-        }
-
-        .filter-container form {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .filter-container input, 
-        .filter-container select {
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            flex: 1;
-            min-width: 150px;
-            transition: border-color 0.3s ease;
-        }
-
-        .filter-container input:focus, 
-        .filter-container select:focus {
-            border-color: #0099ff;
-            outline: none;
-        }
-
-        .filter-container button {
-            background-color: #0099ff;
-            color: white;
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: background-color 0.3s ease;
-        }
-
-        .filter-container button:hover {
-            background-color: #0077cc;
-        }
-
-        @media (max-width: 768px) {
-            .filter-container form {
-                flex-direction: column;
-            }
-
-            .filter-container input, 
-            .filter-container select, 
-            .filter-container button {
-                width: 100%;
-                margin-bottom: 10px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../css/filter.css">
 </head>
+
 <body>
-<nav>
-    <div class="logo">
-        MediCitas
+    <?php include 'header.php'; ?>
+    <div class="contenedor">
+        <?php include 'menu.php'; ?>
+        <main class="contenido">
+            <?php include 'modals/editar-cita.php'; ?>
+            <?php include 'modals/agregar-cita.php'; ?>
+            <?php include 'alert.php'; ?>
+
+            <div class="filter-container">
+                <form method="GET" action="">
+                    <input type="text" id="searchPaciente" name="paciente" placeholder="Buscar por Paciente" value="<?= $paciente_filter ?>" autocomplete="off">
+                    <input type="text" id="searchMedico" name="medico" placeholder="Buscar por Médico" value="<?= $medico_filter ?>" autocomplete="off">
+                    <input type="date" id="searchFecha" name="fecha" value="<?= $fecha_filter ?>">
+                </form>
+            </div>
+
+            <div class="table-container">
+                <h2>LISTA DE CITAS MÉDICAS</h2>
+                <div class="export-buttons">
+                    <a href="#" class="add-btn">Agregar Cita</a>
+                    <a href="?export_pdf" class="btn-pdf">Exportar a PDF</a>
+                    <a href="?export_excel" class="btn-excel">Exportar a Excel</a>
+                    <a href="?export_word" class="btn-word">Exportar a Word</a>
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Paciente</th>
+                                <th>Médico</th>
+                                <th>Hora</th>
+                                <th>Motivo</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="citasTable">
+                            <?php
+                            $estadoClases = [
+                                'Confirmada' => 'confirmed',
+                                'Pendiente' => 'pending',
+                                'Cancelada' => 'cancelled',
+                            ];
+
+                            if (count($citas) > 0) {
+                                foreach ($citas as $fila) {
+                                    $hora_formateada = date("H:i", strtotime($fila['hora']));
+                                    $claseEstado = $estadoClases[$fila['estado']] ?? '';
+                                    echo "<tr>
+                                        <td>{$fila['idCita']}</td>
+                                        <td>{$fila['paciente']}</td>
+                                        <td>{$fila['medico']}</td>
+                                        <td>{$hora_formateada}</td>
+                                        <td>{$fila['motivo']}</td>
+                                        <td class='$claseEstado'>{$fila['estado']}</td>
+                                        <td>{$fila['FechaAtencion']}</td>
+                                        <td>
+                                            <a href='#' class='edit-btn'
+                                                data-idcita='{$fila['idCita']}'
+                                                data-idpaciente='{$fila['idPaciente']}'
+                                                data-dnipaciente='{$fila['dnipaciente']}'
+                                                data-paciente='{$fila['paciente']}'
+                                                data-idmedico='{$fila['idMedico']}'
+                                                data-dnimedico='{$fila['dnimedico']}'
+                                                data-medico='{$fila['medico']}'
+                                                data-fecha='{$fila['FechaAtencion']}'
+                                                data-hora='{$fila['hora']}'
+                                                data-motivo='{$fila['motivo']}'
+                                                data-estado='{$fila['estado']}'
+                                                data-idhorario='{$fila['idHorario']}'></a>
+                                            <a href='#' class='delete-btn' data-idcita='{$fila['idCita']}'></a>
+
+                                        </td>
+                                      </tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='7'>No hay citas registradas</td></tr>";
+                            }
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
     </div>
-    <input type="checkbox" id="click">
-    <label for="click" class="menu-btn">
-        <i class="fas fa-bars"></i>
-    </label>
-    <ul class="menu">
-        <li><a class="active" href="../medicos/header.php">Salir</a></li>
-    </ul>
-</nav>
-
-<main>
-    <div class="filter-container">
-        <form method="GET" action="">
-            <input type="text" name="medico" placeholder="Buscar por Médico" value="<?= $medico_filter ?>">
-            <input type="text" name="paciente" placeholder="Buscar por Paciente" value="<?= $paciente_filter ?>">
-            <input type="date" name="fecha" value="<?= $fecha_filter ?>">
-            <input type="time" name="hora" value="<?= $hora_filter ?>">
-            <select name="estado">
-                <option value="">Estado</option>
-                <option value="Confirmada" <?= $estado_filter == 'Confirmada' ? 'selected' : '' ?>>Confirmada</option>
-                <option value="Pendiente" <?= $estado_filter == 'Pendiente' ? 'selected' : '' ?>>Pendiente</option>
-                <option value="Cancelada" <?= $estado_filter == 'Cancelada' ? 'selected' : '' ?>>Cancelada</option>
-            </select>
-            <button type="submit">Filtrar</button>
-        </form>
-    </div>
-
-    <div class="table-container">
-        <h2>Tabla de Citas Médicas</h2>
-        <div class="export-buttons">
-            <a href="?export_pdf=true" class="btn-pdf">Exportar a PDF</a>
-            <a href="?export_excel=true" class="btn-excel">Exportar a Excel</a>
-            <a href="?export_word=true" class="btn-word">Exportar a Word</a>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Paciente</th>
-                    <th>Médico</th>
-                    <th>Fecha</th>
-                    <th>Hora</th>
-                    <th>Estado</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
-                $estadoClases = [
-                    'Confirmada' => 'confirmed',
-                    'Pendiente' => 'pending',
-                    'Cancelada' => 'cancelled',
-                ];
-
-                if (count($citas) > 0) {
-                    foreach ($citas as $fila) {
-                        $hora_formateada = date("H:i", strtotime($fila['hora']));
-                        $claseEstado = $estadoClases[$fila['estado']] ?? '';
-
-                        echo "<tr>
-                                <td>{$fila['paciente']}</td>
-                                <td>{$fila['medico']}</td>
-                                <td>{$fila['fecha']}</td>
-                                <td>{$hora_formateada}</td>
-                                <td><span class='status $claseEstado'>" . ucfirst($fila['estado']) . "</span></td>
-                              </tr>";
-                    }
-                } else {
-                    echo "<tr><td colspan='5'>No hay citas registradas</td></tr>";
-                }
-                ?>
-            </tbody>
-        </table>
-    </div>
-</main>
-
-<?php
-$conn = null;
-?>
-
 </body>
+<script>
+    // --------------------------------- Script para filtrar en tiempo real y actualizar la tabla dinamicamente ---------------------------------
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchPaciente = document.getElementById("searchPaciente");
+        const searchMedico = document.getElementById("searchMedico");
+        const searchFecha = document.getElementById("searchFecha");
+        const citasTable = document.getElementById("citasTable");
+
+        window.fetchCitas = function() {
+            const paciente = searchPaciente.value.trim();
+            const medico = searchMedico.value.trim();
+            const fecha = searchFecha.value.trim();
+
+            const params = new URLSearchParams({
+                paciente,
+                medico,
+                fecha,
+                ajax: 1
+            });
+
+            fetch(`ListadeCitas.php?${params}`)
+                .then(response => response.json())
+                .then(data => {
+                    citasTable.innerHTML = "";
+                    if (data.length > 0) {
+                        data.forEach(citas => {
+                            const row = `
+                    <tr>
+                        <td>${citas.idCita}</td>
+                        <td>${citas.paciente}</td>
+                        <td>${citas.medico}</td>
+                        <td>${citas.hora}</td>
+                        <td>${citas.motivo}</td>
+                        <td class="${citas.estado}">${citas.estado}</td>
+                        <td>${citas.FechaAtencion}</td>
+                        <td>
+                            <a href="#" class="edit-btn" 
+                                data-idcita="${citas.idCita}"
+                                data-idpaciente="${citas.idPaciente}"
+                                data-dnipaciente="${citas.dnipaciente}"
+                                data-paciente="${citas.paciente}"
+                                data-idmedico="${citas.idMedico}"
+                                data-dnimedico="${citas.dnimedico}"
+                                data-medico="${citas.medico}"
+                                data-fecha="${citas.FechaAtencion}"
+                                data-hora="${citas.hora}"
+                                data-motivo="${citas.motivo}"
+                                data-estado="${citas.estado}"
+                                data-idhorario="${citas.idHorario}"></a>
+                            <a href="#" class="delete-btn" data-idcita="${citas.idCita}"></a>
+                        </td>
+                    </tr>
+                `;
+                            citasTable.innerHTML += row;
+                        });
+                    } else {
+                        citasTable.innerHTML = "<tr><td colspan='8'>No hay usuarios registrados</td></tr>";
+                    }
+
+                    // Vuelve a asignar eventos a los botones después de actualizar la tabla
+                    asignarEventosBotones();
+                })
+                .catch(error => console.error("Error en la búsqueda:", error));
+        }
+        // Eventos para filtrar en tiempo real
+        searchPaciente.addEventListener("keyup", fetchCitas);
+        searchMedico.addEventListener("keyup", fetchCitas);
+        searchFecha.addEventListener("change", fetchCitas);
+    });
+    // --------------------------------- Funcion para asignar eventos a los botones de editar y eliminar ---------------------------------
+    function asignarEventosBotones() {
+        const editButtons = document.querySelectorAll(".edit-btn");
+        const deleteButtons = document.querySelectorAll(".delete-btn");
+
+        editButtons.forEach(btn => {
+            btn.addEventListener("click", function(event) {
+                event.preventDefault();
+                document.getElementById("edit-idCita").value = this.dataset.idcita;
+                document.getElementById("edit-idpaciente").value = this.dataset.idpaciente;
+                document.getElementById("edit-dnipaciente").value = this.dataset.dnipaciente;
+                document.getElementById("edit-buscarpaciente").value = this.dataset.paciente;
+                document.getElementById("edit-idmedico").value = this.dataset.idmedico;
+                document.getElementById("edit-dnimedico").value = this.dataset.dnimedico;
+                document.getElementById("edit-medico").value = this.dataset.medico;
+                document.getElementById("edit-fecha").value = this.dataset.fecha;
+                document.getElementById("edit-hora").value = this.dataset.hora;
+                document.getElementById("edit-motivo").value = this.dataset.motivo;
+                document.getElementById("edit-estado").value = this.dataset.estado;
+                document.getElementById("edit-idhorario").value = this.dataset.idhorario;
+                console.log(this.dataset);
+                modalEditarCita.style.display = "block";
+            });
+        });
+
+        deleteButtons.forEach(btn => {
+            btn.addEventListener("click", async event => {
+                event.preventDefault();
+                const idCita = btn.dataset.idcita;
+                const confirmacion = await Swal.fire({
+                    title: `¿Eliminar la cita Nº ${idCita}?`,
+                    text: "Esta acción no se puede deshacer.",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#d33",
+                    cancelButtonColor: "#3085d6",
+                    confirmButtonText: "Eliminar",
+                    cancelButtonText: "Cancelar"
+                });
+                if (!confirmacion.isConfirmed) return;
+                try {
+                    const response = await fetch("php/delete-cita.php", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/x-www-form-urlencoded"
+                        },
+                        body: `idCita=${idCita}`
+                    });
+                    const data = await response.json();
+                    await Swal.fire({
+                        title: data.status === "success" ? "Éxito" : "Error",
+                        text: data.message,
+                        icon: data.status === "success" ? "success" : "error"
+                    });
+                    if (data.status === "success") location.reload();
+                } catch (error) {
+                    Swal.fire({
+                        title: "Error",
+                        text: "Hubo un problema al eliminar la cita.",
+                        icon: "error"
+                    });
+                    console.error("Error:", error);
+                }
+            });
+        });
+    }
+    // --------------------------------- Metodos para abrir y cerrar modales ---------------------------------
+    const modals = document.querySelectorAll(".modalAgregarCita, .modalEditarCita");
+    const closeButtons = document.querySelectorAll(".close");
+    const addButtons = document.querySelectorAll(".add-btn");
+
+    addButtons.forEach(btn => {
+        btn.addEventListener("click", function(event) {
+            event.preventDefault();
+            modalAgregarCita.style.display = "block";
+            document.getElementById("add-dnimedico").value = "";
+            document.getElementById("add-idmedico").value = "";
+            document.getElementById("add-medico").value = "";
+            document.getElementById("add-idhorario").value = "";
+        });
+    });
+
+    // Función para ocultar modales y resetear la tabla
+    function cerrarModal() {
+        modals.forEach(modal => {
+            modal.style.display = "none";
+        });
+
+        // Ocultar las tablas de citas disponibles
+        document.querySelectorAll(".tabla-container").forEach(tabla => {
+            tabla.style.display = "none";
+        });
+    }
+
+    closeButtons.forEach(button => {
+        button.addEventListener("click", cerrarModal);
+    });
+
+    asignarEventosBotones();
+
+    window.onclick = function(event) {
+        modals.forEach(modal => {
+            if (event.target == modal) {
+                cerrarModal();
+            }
+        });
+    };
+</script>
+
 </html>
