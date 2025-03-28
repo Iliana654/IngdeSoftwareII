@@ -75,19 +75,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         .btn-guardar {
-            background-color: #3182ce;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-        }
+        background-color: #042947;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        width: 100%;
+        transition: background-color 0.3s ease;
+    }
 
-        .btn-guardar:hover {
-            background-color: #2b6cb0;
-        }
+    .btn-guardar:hover {
+    background-color: #064170;
+    }
+
     </style>
 </head>
 <body>

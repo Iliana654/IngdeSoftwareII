@@ -46,7 +46,7 @@
 
         .btn-volver {
             padding: 10px 25px;
-            background-color: #3182ce;
+            background-color: #042947;
             color: white;
             border: none;
             border-radius: 8px;
@@ -56,8 +56,9 @@
         }
 
         .btn-volver:hover {
-            background-color: #2b6cb0;
+            background-color: #064170;
         }
+
     </style>
 </head>
 <body>
@@ -66,8 +67,17 @@
         <i class="fas fa-check-circle"></i>
         <h2>¡Cita Confirmada!</h2>
         <p>Tu cita ha sido registrada con éxito. Pronto recibirás un correo con los detalles.</p>
-        <a href="index.php" class="btn-volver">Volver al Inicio</a>
+        <a href="index.php" class="btn-volver"><i class="fas fa-arrow-left"></i> Volver al Inicio</a>
     </div>
-
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script>
+    window.onload = function() {
+        confetti({
+            particleCount: 150,
+            spread: 70,
+            origin: { y: 0.6 }
+        });
+    };
+</script>
 </body>
 </html>
