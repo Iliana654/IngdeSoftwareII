@@ -7,4 +7,8 @@ Efectos visuales y sonidos: Se agregaron efectos suaves (como aparecer y desapar
 
 Mejoras en el diseño visual: Se hicieron ajustes en el diseño para que la página sea más clara y fácil de entender al momento de reservar una cita.
 
-Validaciones inmediatas: Se puso una validación rápida para asegurarse que el paciente escriba correctamente su DNI y motivo de la cita, mostrando mensajes claros si falta algún dato.#
+Validaciones inmediatas: Se puso una validación rápida para asegurarse que el paciente escriba correctamente su DNI y motivo de la cita, mostrando mensajes claros si falta algún dato.
+
+Envío automático de correos para confirmar citas médicas.
+Correos HTML estilizados para una mejor experiencia del usuario.
+Recuperación de contraseñas usando tokens únicos y temporales para seguridad.

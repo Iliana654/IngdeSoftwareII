@@ -35,7 +35,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     try {
-        // Obtener el horario actual de la cita antes de modificarla
         $consulta = "SELECT idHorario FROM Citas WHERE idCita = ?";
         $statement = $conn->prepare($consulta);
         $statement->execute([$idCita]);
@@ -48,8 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         $idHorarioAnterior = $citaAnterior['idHorario'];
-
-        // Verificar que la hora de la cita esté dentro del rango del horario seleccionado
         $consulta = "SELECT horaInicio, horaFin FROM HorariosMedicos WHERE idHorario = ?";
         $statement = $conn->prepare($consulta);
         $statement->execute([$idhorario]);
@@ -61,7 +58,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             exit();
         }
 
-        // Verificar que no exista otra cita con el mismo paciente, médico, fecha y hora
         $consulta = "SELECT * FROM Citas WHERE idPaciente = ? AND idMedico = ? AND hora = ? AND idCita != ?";
         $statement = $conn->prepare($consulta);
         $statement->execute([$idPaciente, $idMedico, $hora, $idCita]);
@@ -89,7 +85,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($statement->rowCount() > 0) {
             $_SESSION['success'] = "Cita Nº {$idCita} actualizada correctamente.";
             
-            // Solo modificar cupos si el horario cambió
             if ($idHorarioAnterior != $idhorario) {
                 $consulta = "UPDATE HorariosMedicos SET cupos = cupos + 1 WHERE idHorario = ?";
                 $statement = $conn->prepare($consulta);
