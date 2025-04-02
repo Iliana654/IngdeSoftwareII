@@ -186,6 +186,7 @@ if (isset($_GET['export_word'])) {
     $objWriter->save('php://output');
     exit;
 }
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -260,7 +261,6 @@ if (isset($_GET['export_word'])) {
                     <a href="#" class="add-btn">Agregar Cita</a>
                     <a href="?export_pdf" class="btn-pdf">Exportar a PDF</a>
                     <a href="?export_excel" class="btn-excel">Exportar a Excel</a>
-                    <a href="?export_word" class="btn-word">Exportar a Word</a>
                 </div>
                 <div class="table-responsive">
                     <table>
@@ -309,9 +309,8 @@ if (isset($_GET['export_word'])) {
                                                 data-hora='{$fila['hora']}'
                                                 data-motivo='{$fila['motivo']}'
                                                 data-estado='{$fila['estado']}'
-                                                data-idhorario='{$fila['idHorario']}'><img src='../img/edit.png' width='35' height='35'></a>
-                                            <a href='#' class='delete-btn' data-idcita='{$fila['idCita']}'>
-                                            <img src='../img/delete.png' width='35' height='35'></a>
+                                                data-idhorario='{$fila['idHorario']}'></a>
+                                            <a href='#' class='delete-btn' data-idcita='{$fila['idCita']}'></a>
 
                                         </td>
                                       </tr>";
@@ -375,11 +374,8 @@ if (isset($_GET['export_word'])) {
                                 data-hora="${citas.hora}"
                                 data-motivo="${citas.motivo}"
                                 data-estado="${citas.estado}"
-                                data-idhorario="${citas.idHorario}">
-                                <img src="../img/edit.png" width="35" height="35"></a>
-                            <a href="#" class="delete-btn" data-idcita="${citas.idCita}">
-                                <img src="../img/delete.png" width="35" height="35">
-                            </a>
+                                data-idhorario="${citas.idHorario}"></a>
+                            <a href="#" class="delete-btn" data-idcita="${citas.idCita}"></a>
                         </td>
                     </tr>
                 `;
@@ -474,13 +470,27 @@ if (isset($_GET['export_word'])) {
         btn.addEventListener("click", function(event) {
             event.preventDefault();
             modalAgregarCita.style.display = "block";
+            document.getElementById("add-dnimedico").value = "";
+            document.getElementById("add-idmedico").value = "";
+            document.getElementById("add-medico").value = "";
+            document.getElementById("add-idhorario").value = "";
         });
     });
 
-    closeButtons.forEach(button => {
-        button.addEventListener("click", function() {
-            modals.forEach(modal => modal.style.display = "none");
+    // Función para ocultar modales y resetear la tabla
+    function cerrarModal() {
+        modals.forEach(modal => {
+            modal.style.display = "none";
         });
+
+        // Ocultar las tablas de citas disponibles
+        document.querySelectorAll(".tabla-container").forEach(tabla => {
+            tabla.style.display = "none";
+        });
+    }
+
+    closeButtons.forEach(button => {
+        button.addEventListener("click", cerrarModal);
     });
 
     asignarEventosBotones();
@@ -488,7 +498,7 @@ if (isset($_GET['export_word'])) {
     window.onclick = function(event) {
         modals.forEach(modal => {
             if (event.target == modal) {
-                modal.style.display = "none";
+                cerrarModal();
             }
         });
     };

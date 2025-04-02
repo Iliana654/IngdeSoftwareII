@@ -187,6 +187,7 @@ try {
                 <div class="bienvenida">
                     <h2>Portal Médico</h2>
                     <p>Este es su panel de control principal donde podrá acceder a todas las funcionalidades del módulo de médico.</p>
+                    <button class="btn-accion">Ver citas del día</button>
                 </div>
 
                 <div class="estadisticas">
