@@ -8,7 +8,7 @@
         <li><a href="../cerrar-sesion.php"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
     </ul>
 </aside>
-<audio id="sonidoClick" src="audio/click.mp3" preload="auto"></audio>
+
 <script>
     const menuToggle = document.getElementById("menuToggle");
     const menuLateral = document.getElementById("menuLateral");
@@ -17,17 +17,11 @@
             menuLateral.classList.toggle("activo");
         });
     }
-    const sonido = document.getElementById("sonidoClick");
 
     document.querySelectorAll(".menu-lateral a").forEach(link => {
         link.addEventListener("click", (e) => {
             e.preventDefault(); // Evita la redirección inmediata
             const destino = link.getAttribute("href"); // Guarda a dónde iba
-
-            sonido.currentTime = 0;
-            sonido.play().catch(err => {
-                console.warn("Sonido no pudo reproducirse automáticamente:", err);
-            });
 
             // Redirige después de un pequeño retardo (300ms)
             setTimeout(() => {
