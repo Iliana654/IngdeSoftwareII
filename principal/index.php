@@ -42,7 +42,7 @@
             <p>Lunes a Viernes: 8:00 AM - 6:00 PM</p>
             <p>Sábados: 8:00 AM - 2:00 PM</p>
             <p>Domingos: Cerrado</p>
-            <a href="../login/login.php" class="btn-reservar">
+            <a href="reserva.php" class="btn-reservar">
                 <i class="fas fa-calendar-check"></i> Reservar Cita Online
             </a>
         </section>
